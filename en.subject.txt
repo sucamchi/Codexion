@@ -202,11 +202,9 @@ brief overview.
 installation, and/or execution.
 • A “Resources” section listing classic references related to the topic (documentation, articles, tutorials, etc.), as well as a description of how AI was used —
 specifying for which tasks and which parts of the project.
-➠ Additional sections may be required depending on the project (e.g., usage
-examples, feature list, technical choices, etc.).
 
-Any required additions will be explicitly listed below.
 For this project, the README.md must also include:
+
 • A “Blocking cases handled” section describing all the concurrency issues addressed in your solution (e.g., deadlock prevention and Coffman’s conditions, starvation prevention, cooldown handling, precise burnout detection, and log serialization).
 
 • A “Thread synchronization mechanisms” section explaining the specific threading primitives 
