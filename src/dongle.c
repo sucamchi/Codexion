@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:05:03 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:52:55 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 // Initialise a dongle: mutex, condition variable, and wait-queue heap
 
-int	dongle_init(t_dongle *d, int id, int cap, int (*cmp)(long a, long b))
+int	dongle_init(t_dongle *d, int id, int cap)
 {
 	d->id = id;
 	d->taken_by = 0;
@@ -26,7 +26,7 @@ int	dongle_init(t_dongle *d, int id, int cap, int (*cmp)(long a, long b))
 		pthread_mutex_destroy(&d->mutex);
 		return (-1);
 	}
-	if (heap_init(&d->wait_queue, cap, cmp) != 0)
+	if (heap_init(&d->wait_queue, cap) != 0)
 	{
 		pthread_cond_destroy(&d->cond);
 		pthread_mutex_destroy(&d->mutex);
@@ -35,33 +35,27 @@ int	dongle_init(t_dongle *d, int id, int cap, int (*cmp)(long a, long b))
 	return (0);
 }
 
-// Check if dongle can be taken: not held and cooldown has expired
+// Wait helper: handles both cooldown timedwait and plain cond_wait
 
-static int	dongle_is_available(t_dongle *d, long now)
-{
-	return (d->taken_by == 0 && now >= d->cooldown_until);
-}
-
-// Wait helper: if at front, timedwait until cooldown; else plain cond_wait
-
-static void	dongle_do_wait(t_dongle *d, int at_front, long cooldown_end)
+static void	dongle_do_wait(t_dongle *d, int fid, int cid, t_sim *sim)
 {
 	struct timespec	ts;
 
-	if (!at_front)
+	if (fid == cid && d->taken_by == 0
+		&& d->cooldown_until > get_time_ms(sim))
 	{
-		pthread_cond_wait(&d->cond, &d->mutex);
-		return ;
+		ts.tv_sec = d->cooldown_until / 1000;
+		ts.tv_nsec = (d->cooldown_until % 1000) * 1000000;
+		pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
 	}
-	ts.tv_sec = cooldown_end / 1000;
-	ts.tv_nsec = (cooldown_end % 1000) * 1000000;
-	pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
+	else
+		pthread_cond_wait(&d->cond, &d->mutex);
 }
 
 // Acquire dongle: join wait queue, wait until at front and available.
 // Returns 1 on success, 0 if simulation stopped.
 
-int	dongle_take(t_dongle *d, int cid, long prio, t_sim *sim)
+int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 {
 	int	fid;
 
@@ -73,12 +67,10 @@ int	dongle_take(t_dongle *d, int cid, long prio, t_sim *sim)
 	while (!sim->stop)
 	{
 		heap_peek(&d->wait_queue, &fid, NULL);
-		if (fid == cid && dongle_is_available(d, get_time_ms()))
+		if (fid == cid && d->taken_by == 0
+			&& get_time_ms(sim) >= d->cooldown_until)
 			break ;
-		if (fid == cid && d->taken_by == 0 && d->cooldown_until > get_time_ms())
-			dongle_do_wait(d, 1, d->cooldown_until);
-		else
-			pthread_cond_wait(&d->cond, &d->mutex);
+		dongle_do_wait(d, fid, cid, sim);
 	}
 	if (!sim->stop)
 	{
@@ -95,7 +87,16 @@ void	dongle_release(t_dongle *d, t_sim *sim)
 {
 	pthread_mutex_lock(&d->mutex);
 	d->taken_by = 0;
-	d->cooldown_until = get_time_ms() + sim->config.dongle_cooldown;
+	d->cooldown_until = get_time_ms(sim) + sim->config.dongle_cooldown;
 	pthread_cond_broadcast(&d->cond);
 	pthread_mutex_unlock(&d->mutex);
+}
+
+// Destroy dongle resources: cond, mutex, free wait-queue heap
+
+void	dongle_cleanup(t_dongle *d)
+{
+	pthread_cond_destroy(&d->cond);
+	pthread_mutex_destroy(&d->mutex);
+	heap_clear(&d->wait_queue);
 }

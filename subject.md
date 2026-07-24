@@ -1,4 +1,4 @@
-Codexion
+# Codexion
 Master the race for resources before the deadline masters you
 
 Summary: Race against time in this thrilling concurrency challenge! Orchestrate
@@ -8,7 +8,7 @@ This is a newer version of the 42 project called "Philosophers" based on the
 philosophers dining problem.
 
 
-Common Instructions
+## Common Instructions
 • Your project must be written in C.
 • Your project must be written in accordance with the Norm. Run "norminette" to check
 • Your functions should not quit unexpectedly (segmentation fault, bus error, double free, etc.) except for undefined behavior. If this occurs, your project will be
@@ -21,7 +21,7 @@ Additionally, your Makefile must not perform unnecessary relinking.
 • Your Makefile must contain at least the rules $(NAME), all, clean, fclean and re.
 
 
-Overview
+## Overview
 Here are the things you need to know if you want to succeed in this assignment:
 • One or more coders sit in a circular inclusive co-working hub.
 In the center, there is a shared Quantum Compiler.
@@ -42,7 +42,7 @@ burns out due to lack of compiling.
 • Needless to say, coders should avoid burnout!
 
 
-Global rules
+## Global rules
 You have to write one program that complies with the following rules:
 • Global variables are forbidden!
 • Your program must take the following arguments (all mandatory):
@@ -79,7 +79,7 @@ Reminder: All arguments are mandatory. Reject invalid inputs such
 as negative numbers, non-integers, or a scheduler other than fifo or
 edf.
 
-About the logs of your program:
+## About the logs of your program:
 • Any state change of a coder must be formatted as follows:
 ◦ timestamp_in_ms X has taken a dongle
 ◦ timestamp_in_ms X is compiling
@@ -117,7 +117,7 @@ measurements using gettimeofday() are acceptable and recommended
 for simplicity.
 
 
-Mandatory part
+## Mandatory part
 Program Name : codexion
 Files to Submit : Makefile at the root, *.c and *.h is the folder of your choice
 Makefile : NAME, all, clean, fclean, re
@@ -137,7 +137,7 @@ malloc, free,
 printf, fprintf, strcmp, strlen, atoi, memset
 
 
-Description
+## Description
 The specific rules for the mandatory part are:
 • Each coder must be represented by a thread (using pthread_create).
 • There is one dongle between each pair of coders. Therefore, if there are several
@@ -188,7 +188,7 @@ dongle" lines, and how the "burned out" message appears at the moment
 a coder misses their deadline.
 
 
-Readme Requirements
+## Readme Requirements
 A README.md file must be provided at the root of your Git repository. Its purpose is
 to allow anyone unfamiliar with the project (peers, staff, recruiters, etc.) to quickly
 understand what the project is about, how to run it, and where to find more information

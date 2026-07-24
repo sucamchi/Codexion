@@ -6,13 +6,14 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:55 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:22:42 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 15:58:51 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Wake up all coders blocked on dongle waits
+// Monitor thread: waits for start, checks deadlines periodically.
+// Logs burnout within 10ms and stops simulation.
 
 static void	monitor_stop_all(t_sim *sim)
 {
@@ -34,7 +35,7 @@ static void	monitor_stop_all(t_sim *sim)
 static int	monitor_check_state(t_sim *sim)
 {
 	int		i;
-	long	now;
+	int		now;
 
 	i = 0;
 	while (i < sim->config.num_coders)
@@ -45,7 +46,7 @@ static int	monitor_check_state(t_sim *sim)
 	}
 	if (i == sim->config.num_coders)
 		return (-1);
-	now = get_time_ms();
+	now = get_time_ms(sim);
 	i = 0;
 	while (i < sim->config.num_coders)
 	{
@@ -53,7 +54,7 @@ static int	monitor_check_state(t_sim *sim)
 			< sim->config.num_compiles_required
 			&& sim->coders[i].last_compile_start >= 0
 			&& now - sim->coders[i].last_compile_start
-			> (long)sim->config.time_to_burnout)
+			> sim->config.time_to_burnout)
 			return (sim->coders[i].id);
 		i++;
 	}
@@ -78,7 +79,7 @@ static void	monitor_wait_start(t_sim *sim)
 	sim->ready_count++;
 	if (sim->ready_count == sim->config.num_coders + 1)
 		pthread_cond_broadcast(&sim->start_cond);
-	while (sim->start_time < 0)
+	while (!sim->started)
 		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
 	pthread_mutex_unlock(&sim->sim_mutex);
 }

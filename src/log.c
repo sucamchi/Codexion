@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:43 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:05:43 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:53:02 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,8 @@ void	log_init(t_sim *sim)
 
 void	log_msg(t_sim *sim, char *msg, int coder_id)
 {
-	long	ts;
-
 	pthread_mutex_lock(&sim->log_mutex);
-	ts = get_time_ms() - sim->start_time;
-	printf("%ld %d %s\n", ts, coder_id, msg);
+	printf("%d %d %s\n", get_time_ms(sim), coder_id, msg);
 	pthread_mutex_unlock(&sim->log_mutex);
 }
 

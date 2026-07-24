@@ -6,26 +6,25 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:05:37 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 15:55:37 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Initialise a min-heap with given capacity and comparison function
+// Initialise a heap with given capacity.
 
-int	heap_init(t_heap *h, int capacity, int (*cmp)(long a, long b))
+int	heap_init(t_heap *h, int capacity)
 {
-	h->data = malloc(sizeof(t_heap_elem) * (unsigned long)capacity);
+	h->data = malloc(sizeof(t_heap_elem) * (unsigned int)capacity);
 	if (!h->data)
 		return (-1);
 	h->size = 0;
 	h->capacity = capacity;
-	h->cmp = cmp;
 	return (0);
 }
 
-// Sift-up: bubble element at index up to restore heap property
+// Sift-up: bubble element from index up to restore heap property
 
 static void	heap_sift_up(t_heap *h, int i)
 {
@@ -35,7 +34,7 @@ static void	heap_sift_up(t_heap *h, int i)
 	while (i > 0)
 	{
 		p = (i - 1) / 2;
-		if (h->cmp(h->data[i].priority, h->data[p].priority) >= 0)
+		if (h->data[i].priority >= h->data[p].priority)
 			break ;
 		tmp = h->data[i];
 		h->data[i] = h->data[p];
@@ -55,10 +54,10 @@ static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 		c = 2 * i + 1;
 		if (c >= h->size)
 			break ;
-		if (c + 1 < h->size && h->cmp(h->data[c + 1].priority,
-				h->data[c].priority) < 0)
+		if (c + 1 < h->size && h->data[c + 1].priority
+			< h->data[c].priority)
 			c++;
-		if (h->cmp(el.priority, h->data[c].priority) <= 0)
+		if (el.priority <= h->data[c].priority)
 			break ;
 		h->data[i] = h->data[c];
 		i = c;
@@ -68,7 +67,7 @@ static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 
 // Push element onto heap. Returns 0 on success, -1 if full.
 
-int	heap_push(t_heap *h, int coder_id, long priority)
+int	heap_push(t_heap *h, int coder_id, int priority)
 {
 	if (h->size >= h->capacity)
 		return (-1);
@@ -79,7 +78,7 @@ int	heap_push(t_heap *h, int coder_id, long priority)
 	return (0);
 }
 
-// Pop minimum element from heap. Use heap_peek first to read the value.
+// Pop element from heap. Returns 0 on success, -1 if empty.
 
 int	heap_pop(t_heap *h)
 {

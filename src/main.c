@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:49 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:35:38 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:55:56 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,19 @@
 
 static int	parse_int_arg(char *s, int *out, int min)
 {
-	if (str_to_int(s, out) != 0 || *out < min)
+	int	i;
+
+	i = 0;
+	if (!s || s[0] == '\0')
+		return (-1);
+	while (s[i])
+	{
+		if (s[i] < '0' || s[i] > '9')
+			return (-1);
+		i++;
+	}
+	*out = atoi(s);
+	if (*out < min)
 		return (-1);
 	return (0);
 }
@@ -34,25 +46,25 @@ static int	parse_scheduler(char *s)
 
 // Parse and validate all 8 command-line arguments
 
-int	parse_args(int ac, char **av, t_config *cfg)
+int	parse_args(int argc, char **argv, t_config *cfg)
 {
-	if (ac != 9)
+	if (argc != 9)
 		return (-1);
-	if (parse_int_arg(av[1], &cfg->num_coders, 1))
+	if (parse_int_arg(argv[1], &cfg->num_coders, 1))
 		return (-1);
-	if (parse_int_arg(av[2], &cfg->time_to_burnout, 1))
+	if (parse_int_arg(argv[2], &cfg->time_to_burnout, 1))
 		return (-1);
-	if (parse_int_arg(av[3], &cfg->time_to_compile, 1))
+	if (parse_int_arg(argv[3], &cfg->time_to_compile, 1))
 		return (-1);
-	if (parse_int_arg(av[4], &cfg->time_to_debug, 1))
+	if (parse_int_arg(argv[4], &cfg->time_to_debug, 1))
 		return (-1);
-	if (parse_int_arg(av[5], &cfg->time_to_refactor, 1))
+	if (parse_int_arg(argv[5], &cfg->time_to_refactor, 1))
 		return (-1);
-	if (parse_int_arg(av[6], &cfg->num_compiles_required, 1))
+	if (parse_int_arg(argv[6], &cfg->num_compiles_required, 1))
 		return (-1);
-	if (parse_int_arg(av[7], &cfg->dongle_cooldown, 0))
+	if (parse_int_arg(argv[7], &cfg->dongle_cooldown, 0))
 		return (-1);
-	cfg->scheduler = parse_scheduler(av[8]);
+	cfg->scheduler = parse_scheduler(argv[8]);
 	if (cfg->scheduler < 0)
 		return (-1);
 	return (0);
@@ -75,7 +87,7 @@ static void	launch_threads(t_sim *sim)
 	pthread_mutex_lock(&sim->sim_mutex);
 	while (sim->ready_count < sim->config.num_coders + 1)
 		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
-	sim->start_time = get_time_ms();
+	sim->started = 1;
 	pthread_cond_broadcast(&sim->start_cond);
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
@@ -91,7 +103,7 @@ int	main(int ac, char **av)
 		fprintf(stderr, "incorrect arguments\n");
 		return (1);
 	}
-	if (init_sim(&sim, cmp_min) != 0)
+	if (init_sim(&sim) != 0)
 	{
 		fprintf(stderr, "Error: memory allocation failed\n");
 		return (1);

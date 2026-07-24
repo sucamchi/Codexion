@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:15:08 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:52:40 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@ static void	coder_wait_start(t_coder *c, t_sim *sim)
 	sim->ready_count++;
 	if (sim->ready_count == sim->config.num_coders + 1)
 		pthread_cond_broadcast(&sim->start_cond);
-	while (sim->start_time < 0)
+	while (!sim->started)
 		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
 	pthread_mutex_unlock(&sim->sim_mutex);
-	c->last_compile_start = sim->start_time;
+	c->last_compile_start = 0;
 }
 
 // Take both dongles with deadlock prevention:
@@ -48,12 +48,12 @@ static int	coder_take_dongles(t_coder *c, t_sim *sim)
 {
 	t_dongle	*first;
 	t_dongle	*second;
-	long		prio;
+	int			prio;
 
 	if (sim->config.scheduler == EDF)
-		prio = c->last_compile_start + (long)sim->config.time_to_burnout;
+		prio = c->last_compile_start + sim->config.time_to_burnout;
 	else
-		prio = get_time_ms();
+		prio = get_time_ms(sim);
 	coder_pick_dongles(c, &first, &second);
 	if (first == second)
 	{
@@ -79,18 +79,18 @@ static int	coder_do_cycle(t_coder *c, t_sim *sim)
 {
 	if (!coder_take_dongles(c, sim))
 		return (0);
-	c->last_compile_start = get_time_ms();
+	c->last_compile_start = get_time_ms(sim);
 	log_msg(sim, "is compiling", c->id);
-	ms_sleep(sim->config.time_to_compile);
+	ms_sleep(sim->config.time_to_compile, sim);
 	dongle_release(c->left_dongle, sim);
 	dongle_release(c->right_dongle, sim);
 	c->compiles_done++;
 	if (c->compiles_done >= sim->config.num_compiles_required)
 		return (1);
 	log_msg(sim, "is debugging", c->id);
-	ms_sleep(sim->config.time_to_debug);
+	ms_sleep(sim->config.time_to_debug, sim);
 	log_msg(sim, "is refactoring", c->id);
-	ms_sleep(sim->config.time_to_refactor);
+	ms_sleep(sim->config.time_to_refactor, sim);
 	return (1);
 }
 

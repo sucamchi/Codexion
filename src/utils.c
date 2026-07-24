@@ -6,65 +6,62 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:06:12 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:53:24 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Return current time in milliseconds since epoch
+// Return elapsed time in milliseconds since simulation start
 
-long	get_time_ms(void)
+int	get_time_ms(t_sim *sim)
 {
-	struct timeval	tv;
+	struct timeval	now;
+	int				sec;
+	int				usec;
 
-	gettimeofday(&tv, NULL);
-	return ((long)tv.tv_sec * 1000 + (long)tv.tv_usec / 1000);
+	gettimeofday(&now, NULL);
+	sec = (int)(now.tv_sec - sim->base_time.tv_sec);
+	usec = (int)(now.tv_usec - sim->base_time.tv_usec);
+	if (usec < 0)
+	{
+		sec--;
+		usec += 1000000;
+	}
+	return (sec * 1000 + usec / 1000);
 }
 
 // Precise sleep using usleep polling to avoid drift
 
-void	ms_sleep(long ms)
+void	ms_sleep(int ms, t_sim *sim)
 {
-	long	start;
+	int	start;
 
-	start = get_time_ms();
-	while (get_time_ms() - start < ms)
+	start = get_time_ms(sim);
+	while (get_time_ms(sim) - start < ms)
 		usleep(500);
 }
 
-// Convert string to positive integer
-// Returns 0 on success (value in *out), -1 on invalid input
+// Peek at the minimum element without removing it
 
-int	str_to_int(char *s, int *out)
+int	heap_peek(t_heap *h, int *coder_id, int *priority)
 {
-	long	n;
-	int		i;
-
-	i = 0;
-	n = 0;
-	if (!s || s[0] == '\0')
+	if (h->size == 0)
 		return (-1);
-	while (s[i] >= '0' && s[i] <= '9')
-	{
-		n = n * 10 + (s[i] - '0');
-		if (n > 2147483647L)
-			return (-1);
-		i++;
-	}
-	if (s[i] != '\0')
-		return (-1);
-	*out = (int)n;
+	if (coder_id)
+		*coder_id = h->data[0].coder_id;
+	if (priority)
+		*priority = h->data[0].priority;
 	return (0);
 }
 
-// Min-heap comparator: negative if a < b, 0 if equal, positive if a > b
+// Free the internal data array and reset the heap
 
-int	cmp_min(long a, long b)
+void	heap_clear(t_heap *h)
 {
-	if (a < b)
-		return (-1);
-	if (a > b)
-		return (1);
-	return (0);
+	if (h->data)
+		free(h->data);
+	h->data = NULL;
+	h->size = 0;
+	h->capacity = 0;
 }

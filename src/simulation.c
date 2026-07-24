@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/23 18:06:03 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:53:17 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,19 @@
 
 // Allocate and initialise all dongles
 
-static int	init_dongles(t_sim *sim, int (*cmp)(long, long))
+static int	init_dongles(t_sim *sim)
 {
 	int	i;
 	int	n;
 
 	n = sim->config.num_coders;
-	sim->dongles = malloc(sizeof(t_dongle) * (unsigned long)n);
+	sim->dongles = malloc(sizeof(t_dongle) * (unsigned int)n);
 	if (!sim->dongles)
 		return (-1);
 	i = 0;
 	while (i < n)
 	{
-		if (dongle_init(&sim->dongles[i], i + 1, n, cmp) != 0)
+		if (dongle_init(&sim->dongles[i], i + 1, n) != 0)
 		{
 			while (--i >= 0)
 				dongle_cleanup(&sim->dongles[i]);
@@ -49,7 +49,7 @@ static int	init_coders(t_sim *sim)
 	int	n;
 
 	n = sim->config.num_coders;
-	sim->coders = malloc(sizeof(t_coder) * (unsigned long)n);
+	sim->coders = malloc(sizeof(t_coder) * (unsigned int)n);
 	if (!sim->coders)
 		return (-1);
 	i = 0;
@@ -71,14 +71,15 @@ static int	init_coders(t_sim *sim)
 
 // Initialise simulation state. sim->config must be set beforehand.
 
-int	init_sim(t_sim *sim, int (*cmp)(long, long))
+int	init_sim(t_sim *sim)
 {
 	sim->dongles = NULL;
 	sim->coders = NULL;
 	sim->stop = 0;
 	sim->ready_count = 0;
-	sim->start_time = -1;
-	if (init_dongles(sim, cmp) != 0)
+	sim->started = 0;
+	gettimeofday(&sim->base_time, NULL);
+	if (init_dongles(sim) != 0)
 		return (-1);
 	if (init_coders(sim) != 0)
 	{
