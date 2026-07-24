@@ -6,7 +6,7 @@ SRCDIR = src
 OBJDIR = obj
 
 SRCS = $(SRCDIR)/main.c \
-       $(SRCDIR)/sim.c \
+       $(SRCDIR)/simulation.c \
        $(SRCDIR)/coder.c \
        $(SRCDIR)/dongle.c \
        $(SRCDIR)/heap.c \
