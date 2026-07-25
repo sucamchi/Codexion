@@ -40,12 +40,6 @@ The scheduler must be either `fifo` or `edf`:
 ```
 
 
-Single coder, single dongle, no cooldown:
-
-```bash
-./codexion 1 800 200 200 200 1 0 fifo
-```
-
 EDF scheduling with cooldown and a short burnout window:
 
 ```bash
@@ -63,7 +57,6 @@ High contention with more coders and a longer cooldown:
 
 - One thread per coder.
 - One shared dongle between each pair of coders.
-- Dongle cooldown after each release.
 - FIFO or EDF arbitration with a heap-based wait queue.
 - Serialized logging to avoid mixed output.
 - Separate monitor thread for burnout detection.
@@ -73,7 +66,6 @@ High contention with more coders and a longer cooldown:
 
 - Deadlock prevention by avoiding circular resource acquisition patterns.
 - Starvation control through FIFO/EDF arbitration on each dongle.
-- Cooldown handling so a released dongle cannot be reused immediately.
 - Precise burnout detection using timestamps and a monitor thread.
 - Log serialization so state messages never interleave.
 - Single-coder handling, where the coder uses the only dongle on the table.
