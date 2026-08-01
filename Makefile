@@ -10,7 +10,6 @@ SRCS = $(SRCDIR)/main.c \
        $(SRCDIR)/coder.c \
        $(SRCDIR)/dongle.c \
        $(SRCDIR)/heap.c \
-       $(SRCDIR)/log.c \
        $(SRCDIR)/monitor.c \
        $(SRCDIR)/utils.c
 

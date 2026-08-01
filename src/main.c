@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:49 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 12:15:35 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 21:42:26 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ int	parse_args(int argc, char **argv, t_config *cfg)
 	return (0);
 }
 
-// Start every worker thread, wait for the barrier, then release them all.
+// Start every thread, wait for the barrier, then release them all.
 
 static void	launch_threads(t_sim *sim)
 {

@@ -6,17 +6,15 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 12:15:35 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 22:00:59 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 // Initialize a dongle's mutex, condition variable, and waiting queue.
-
-int	dongle_init(t_dongle *d, int id, int cap)
+int	dongle_init(t_dongle *d)
 {
-	d->id = id;
 	d->taken_by = 0;
 	d->cooldown_until = 0;
 	if (pthread_mutex_init(&d->mutex, NULL) != 0)
@@ -26,7 +24,7 @@ int	dongle_init(t_dongle *d, int id, int cap)
 		pthread_mutex_destroy(&d->mutex);
 		return (-1);
 	}
-	if (heap_init(&d->wait_queue, cap) != 0)
+	if (heap_init(&d->wait_queue) != 0)
 	{
 		pthread_cond_destroy(&d->cond);
 		pthread_mutex_destroy(&d->mutex);
@@ -35,13 +33,15 @@ int	dongle_init(t_dongle *d, int id, int cap)
 	return (0);
 }
 
-// Sleep on the dongle condition variable, using a timed wait during cooldown.
+// Sleep on the dongle's condition variable until the coder can take it.
+// Uses `pthread_cond_timedwait` if the dongle is cooling down.
 
-static void	dongle_do_wait(t_dongle *d, int fid, int cid, t_sim *sim)
+static void	dongle_do_wait(t_dongle *d, int first, int cid, t_sim *sim)
 {
 	struct timespec	ts;
 
-	if (fid == cid && d->taken_by == 0 && d->cooldown_until > get_time_ms(sim))
+	if (first == cid && d->taken_by == 0
+		&& d->cooldown_until > get_time_ms(sim))
 	{
 		ts.tv_sec = d->cooldown_until / 1000;
 		ts.tv_nsec = (d->cooldown_until % 1000) * 1000000;
@@ -51,24 +51,25 @@ static void	dongle_do_wait(t_dongle *d, int fid, int cid, t_sim *sim)
 		pthread_cond_wait(&d->cond, &d->mutex);
 }
 
-// Join the waiting queue and block until this coder can use the dongle.
+// Lock the dongle mutex, add the coder to the waiting queue,
+// and wait until the coder can take the dongle.
 
 int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 {
-	int	fid;
+	int	first;
 
 	pthread_mutex_lock(&d->mutex);
 	heap_push(&d->wait_queue, cid, prio);
-	heap_peek(&d->wait_queue, &fid, NULL);
-	if (fid == cid)
+	heap_peek(&d->wait_queue, &first, NULL);
+	if (first == cid)
 		pthread_cond_broadcast(&d->cond);
 	while (!sim->stop)
 	{
-		heap_peek(&d->wait_queue, &fid, NULL);
-		if (fid == cid && d->taken_by == 0
+		heap_peek(&d->wait_queue, &first, NULL);
+		if (first == cid && d->taken_by == 0
 			&& get_time_ms(sim) >= d->cooldown_until)
 			break ;
-		dongle_do_wait(d, fid, cid, sim);
+		dongle_do_wait(d, first, cid, sim);
 	}
 	if (!sim->stop)
 	{
@@ -90,7 +91,7 @@ void	dongle_release(t_dongle *d, t_sim *sim)
 	pthread_mutex_unlock(&d->mutex);
 }
 
-// Destroy the dongle's synchronization objects and free its queue storage.
+// Destroy the dongle's mutex, condition variable, and heap storage.
 
 void	dongle_cleanup(t_dongle *d)
 {

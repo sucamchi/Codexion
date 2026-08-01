@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 14:43:22 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 21:26:46 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ static int	init_dongles(t_sim *sim)
 	i = 0;
 	while (i < n)
 	{
-		if (dongle_init(&sim->dongles[i], i + 1, n) != 0)
+		if (dongle_init(&sim->dongles[i]) != 0)
 		{
 			while (--i >= 0)
 				dongle_cleanup(&sim->dongles[i]);
@@ -101,13 +101,14 @@ int	init_sim(t_sim *sim)
 		free_dongles(sim);
 		return (-1);
 	}
-	log_init(sim);
+	pthread_mutex_init(&sim->log_mutex, NULL);
 	pthread_mutex_init(&sim->sim_mutex, NULL);
 	pthread_cond_init(&sim->start_cond, NULL);
 	return (0);
 }
 
-// Join all threads and destroy every resource owned by the simulation.
+// Join all threads and free the simulation state.
+// Cleans up memory, mutexes and logging.
 
 void	cleanup_sim(t_sim *sim)
 {
@@ -132,5 +133,5 @@ void	cleanup_sim(t_sim *sim)
 	free(sim->coders);
 	pthread_cond_destroy(&sim->start_cond);
 	pthread_mutex_destroy(&sim->sim_mutex);
-	log_cleanup(sim);
+	pthread_mutex_destroy(&sim->log_mutex);
 }

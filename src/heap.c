@@ -6,21 +6,20 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 12:13:41 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 20:58:01 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Allocate storage for a min-heap with the requested capacity.
+// Initialize the heap with capacity for two coders.
 
-int	heap_init(t_heap *h, int capacity)
+int	heap_init(t_heap *h)
 {
-	h->data = malloc(sizeof(t_heap_elem) * (unsigned int)capacity);
+	h->data = malloc(sizeof(t_heap_elem) * 2);
 	if (!h->data)
 		return (-1);
 	h->size = 0;
-	h->capacity = capacity;
 	return (0);
 }
 
@@ -43,7 +42,7 @@ static void	heap_sift_up(t_heap *h, int i)
 	}
 }
 
-// Move the root element downward after a pop until the heap order is restored.
+// Move an element downward until the heap order is restored.
 
 static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 {
@@ -54,8 +53,7 @@ static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 		c = 2 * i + 1;
 		if (c >= h->size)
 			break ;
-		if (c + 1 < h->size && h->data[c + 1].priority
-			< h->data[c].priority)
+		if (c + 1 < h->size && h->data[c + 1].priority < h->data[c].priority)
 			c++;
 		if (el.priority <= h->data[c].priority)
 			break ;
@@ -65,12 +63,10 @@ static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 	h->data[i] = el;
 }
 
-// Insert one coder into the priority queue.
+// Insert one coder into the heap with its priority.
 
 int	heap_push(t_heap *h, int coder_id, int priority)
 {
-	if (h->size >= h->capacity)
-		return (-1);
 	h->data[h->size].coder_id = coder_id;
 	h->data[h->size].priority = priority;
 	heap_sift_up(h, h->size);
@@ -78,7 +74,7 @@ int	heap_push(t_heap *h, int coder_id, int priority)
 	return (0);
 }
 
-// Remove the coder with the smallest priority from the queue.
+// Pop the coder with the smallest priority from the queue.
 
 int	heap_pop(t_heap *h)
 {

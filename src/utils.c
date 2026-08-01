@@ -6,13 +6,14 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 14:37:43 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 21:28:19 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Return the number of milliseconds since the simulation started.
+// Calculate the number of milliseconds since the simulation started.
+// Used for timestamps and timeouts.
 
 int	get_time_ms(t_sim *sim)
 {
@@ -31,7 +32,8 @@ int	get_time_ms(t_sim *sim)
 	return (sec * 1000 + usec / 1000);
 }
 
-// Sleep for approximately the requested number of milliseconds.
+// Sleep for ms milliseconds, checking sim->stop every 500 µs so
+// the coder wakes up early when the monitor signals a burnout.
 
 void	ms_sleep(int ms, t_sim *sim)
 {
@@ -42,7 +44,18 @@ void	ms_sleep(int ms, t_sim *sim)
 		usleep(500);
 }
 
+// Thread-safe log: print timestamp, coder ID, and message.
+// The log mutex ensures that messages from different threads don't interleave.
+
+void	log_msg(t_sim *sim, char *msg, int coder_id)
+{
+	pthread_mutex_lock(&sim->log_mutex);
+	printf("%d %d %s\n", get_time_ms(sim), coder_id, msg);
+	pthread_mutex_unlock(&sim->log_mutex);
+}
+
 // Read the top heap element without removing it.
+// Called by the monitor to check the priority of waiting coders.
 
 int	heap_peek(t_heap *h, int *coder_id, int *priority)
 {
@@ -63,5 +76,4 @@ void	heap_clear(t_heap *h)
 		free(h->data);
 	h->data = NULL;
 	h->size = 0;
-	h->capacity = 0;
 }

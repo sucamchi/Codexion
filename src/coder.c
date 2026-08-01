@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 15:02:06 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 21:05:49 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 // Coder joins the start barrier and waits until main releases every thread.
 
-static void	coder_wait_start(t_coder *c, t_sim *sim)
+static void	coder_wait_start(t_sim *sim)
 {
 	pthread_mutex_lock(&sim->sim_mutex);
 	sim->ready_count++;
@@ -23,7 +23,6 @@ static void	coder_wait_start(t_coder *c, t_sim *sim)
 	while (!sim->started)
 		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
 	pthread_mutex_unlock(&sim->sim_mutex);
-	c->last_compile_start = 0;
 }
 
 // Choose the order for locking the two dongles.
@@ -42,6 +41,7 @@ static void	coder_pick_dongles(t_coder *c, t_dongle **first, t_dongle **second)
 		*second = c->right_dongle;
 	}
 }
+// Attempt to take both dongles if possible, otherwise wait.
 
 static int	coder_take_dongles(t_coder *c, t_sim *sim)
 {
@@ -104,7 +104,8 @@ void	*coder_lifecycle(void *arg)
 
 	c = (t_coder *)arg;
 	sim = c->sim;
-	coder_wait_start(c, sim);
+	coder_wait_start(sim);
+	c->last_compile_start = 0;
 	while (!sim->stop && c->compiles_done < sim->config.num_compiles_required)
 	{
 		if (!coder_do_cycle(c, sim))

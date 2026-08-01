@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:55 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 17:11:06 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 21:43:10 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ static int	monitor_check_state(t_sim *sim)
 }
 
 // Set the shared stop flag while holding the simulation mutex.
+// This ensures that all threads will notice the stop condition and exit.
 
 static void	set_stop(t_sim *sim)
 {
