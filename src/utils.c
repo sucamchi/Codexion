@@ -6,13 +6,13 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:53:24 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 14:37:43 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Return elapsed time in milliseconds since simulation start
+// Return the number of milliseconds since the simulation started.
 
 int	get_time_ms(t_sim *sim)
 {
@@ -31,18 +31,18 @@ int	get_time_ms(t_sim *sim)
 	return (sec * 1000 + usec / 1000);
 }
 
-// Precise sleep using usleep polling to avoid drift
+// Sleep for approximately the requested number of milliseconds.
 
 void	ms_sleep(int ms, t_sim *sim)
 {
 	int	start;
 
 	start = get_time_ms(sim);
-	while (get_time_ms(sim) - start < ms)
+	while (!sim->stop && get_time_ms(sim) - start < ms)
 		usleep(500);
 }
 
-// Peek at the minimum element without removing it
+// Read the top heap element without removing it.
 
 int	heap_peek(t_heap *h, int *coder_id, int *priority)
 {
@@ -55,7 +55,7 @@ int	heap_peek(t_heap *h, int *coder_id, int *priority)
 	return (0);
 }
 
-// Free the internal data array and reset the heap
+// Free the heap storage and reset its fields.
 
 void	heap_clear(t_heap *h)
 {

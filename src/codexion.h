@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:04:15 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:53:31 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 14:40:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ typedef struct s_sim	t_sim;
 // - left_dongle / right_dongle: the two dongles this coder uses
 // - last_compile_start: timestamp (ms) of most recent compile start
 
-struct s_coder
+struct					s_coder
 {
 	int					id;
 	int					compiles_done;

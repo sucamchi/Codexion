@@ -53,15 +53,6 @@ High contention with more coders and a longer cooldown:
 ```
 
 
-## Features
-
-- One thread per coder.
-- One shared dongle between each pair of coders.
-- FIFO or EDF arbitration with a heap-based wait queue.
-- Serialized logging to avoid mixed output.
-- Separate monitor thread for burnout detection.
-- Clean shutdown with resource cleanup.
-
 ## Blocking cases handled
 
 - Deadlock prevention by avoiding circular resource acquisition patterns.
@@ -75,6 +66,58 @@ High contention with more coders and a longer cooldown:
 - `pthread_mutex_t` protects each dongle state, the global log output, and shared simulation flags.
 - `pthread_cond_t` is used as a start barrier and to wake waiting coders when a dongle becomes available.
 - The dongle wait queue is implemented as a heap so the selected scheduler can decide which waiting coder is served next.
+
+## A note on the shared stop/progress flags
+
+`sim->stop`, `coder->compiles_done`, and `coder->last_compile_start` are read
+in places that don't hold a mutex — for example, `coder_lifecycle`'s main
+loop checks `sim->stop` directly, and `dongle_take` checks it while holding
+only the dongle's own mutex rather than `sim_mutex`.
+
+This is a deliberate trade-off, not an oversight:
+
+- These fields are plain `int`s, and on every architecture this project
+  targets, an aligned `int` read or write is a single atomic bus operation —
+  there's no possibility of a torn read where one thread sees half an old
+  value and half a new one.
+- The actual *correctness* of wakeups doesn't depend on these reads at all.
+  A coder blocked in `dongle_take` is only ever woken by
+  `pthread_cond_broadcast` (on release, on a new arrival, or from
+  `monitor_stop_all` when the monitor sets `stop`). The unguarded read of
+  `stop` is just the condition the thread re-checks *after* waking up — the
+  condition variable and its associated mutex are what guarantee the thread
+  doesn't miss a wakeup or race on the dongle's own state.
+- Because every coder and the monitor also re-check these flags at least
+  once every loop iteration (the monitor polls every 1 ms), the worst case
+  is a thread noticing `stop` a few microseconds later than another thread
+  set it — never a stale value it never notices at all.
+
+The formally "correct" alternative would be to wrap every read of `stop`,
+`compiles_done`, and `last_compile_start` in `sim_mutex`. We chose not to,
+because it would mean the monitor and every dongle wait loop taking a third,
+unrelated mutex on every single poll, adding lock contention that works
+against the sub-10ms burnout precision requirement, in exchange for a
+guarantee that doesn't change any observable behavior on real hardware.
+If this project were extended beyond x86/ARM word-atomic reads, or built
+with a stricter memory model in mind, these flags would need to move to
+`_Atomic int` or be brought under `sim_mutex`.
+
+## Execution flow
+
+The program runs in this order:
+
+1. `main()` starts the program and calls `parse_args()` to check the command-line values.
+2. If the arguments are valid, `main()` calls `init_sim()` to create the coders, dongles, mutexes, and condition variable.
+3. `main()` then calls `launch_threads()` to start every coder thread and the monitor thread.
+4. Each coder thread runs `coder_lifecycle()`, which first waits in `coder_wait_start()` until every thread is ready.
+5. When the simulation starts, each coder repeats `coder_do_cycle()` until it has done enough compiles or the simulation stops.
+6. Inside each cycle, the coder takes dongles with `coder_take_dongles()`, which uses `coder_pick_dongles()` and `dongle_take()` to avoid deadlocks.
+7. After both dongles are taken, the coder compiles, releases the dongles with `dongle_release()`, and then continues with the debug and refactor steps.
+8. At the same time, the monitor thread runs `monitor_run()`, which waits for the start signal and keeps calling `monitor_check_state()` to look for burnout or for everyone finishing.
+9. If a coder burns out, the monitor sets the stop flag with `set_stop()` and wakes any waiting coders with `monitor_stop_all()`.
+10. When all threads finish, `main()` calls `cleanup_sim()` to join the threads and free every resource.
+
+![Execution flow diagram](https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fz9isrrnm8su4bn265b9v.png)
 
 ## How it works
 
@@ -190,8 +233,8 @@ take_both_dongles(coder):
 Each dongle has a **min-heap** (priority queue) as its waiting list.
 Coders join the queue with a priority value:
 
-- **FIFO**: priority = the current timestamp (earlier = smaller = wins)
-- **EDF**: priority = `last_compile_start + time_to_burnout` (earlier deadline = smaller = wins)
+- **FIFO**: priority = the current timestamp (earliest wins)
+- **EDF**: priority = `last_compile_start + time_to_burnout` (earlier deadline wins)
 
 The heap always keeps the smallest priority at the top.
 
@@ -298,7 +341,7 @@ peek(heap):       // look without removing
     return the element at position 0
 ```
 
-### How time works (no overflow, only ints)
+### How time is measured
 
 Instead of using absolute Unix timestamps (which would overflow `int`),
 we capture the current time **once** at startup in `sim->base_time`.
@@ -319,7 +362,7 @@ get_time_ms(sim):
 
 All log messages go through `log_msg()`, which locks a dedicated mutex
 before printing. This guarantees that two threads can't print at the
-same time and mangle each other's output:
+same time and mix their output:
 
 ```
 log_msg(sim, message, coder_id):
@@ -333,9 +376,14 @@ log_msg(sim, message, coder_id):
 - 42 Codexion subject.
 - 42 Philosophers subject. (previous version of this project)
 - POSIX threads documentation for `pthread_create`, `pthread_mutex_*`, and `pthread_cond_*`.
-- `gettimeofday(2)` documentation for millisecond timestamps.
+- `gettimeofday` and `usleep` documentation 
 - [Dining philosophers problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+- [Concurrency](https://en.wikipedia.org/wiki/Concurrency_(computer_science))
+- [Pthreads](https://en.wikipedia.org/wiki/Pthreads)
+- https://medium.com/@denaelgammal/dining-philosophers-problem-42-project-guide-mandatory-part-a20fb8dc530e
+- https://dev.to/yel-bakk/codexion-4fk8
+- Books: C Programming: A Modern Approach (2nd Edition) by K. N. King and Pthreads Programming: A POSIX Standard for Better Multiprocessing by B Nichols, D. Buttlar, J. Farrell
 
 ### AI usage
 
-AI was used to help draft the README structure, as a tutor and to organize the required concurrency and synchronization sections.
+AI was used to help draft the README structure, as a tutor and to help refactor functions to adjust to the project requirements and norminette.

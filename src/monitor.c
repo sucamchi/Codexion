@@ -6,16 +6,15 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:55 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 15:58:51 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 17:11:06 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Monitor thread: waits for start, checks deadlines periodically.
-// Logs burnout within 10ms and stops simulation.
+// Wake every coder waiting on a dongle so they can notice the stop flag.
 
-static void	monitor_stop_all(t_sim *sim)
+static void	monitor_wake_all(t_sim *sim)
 {
 	int	i;
 
@@ -29,13 +28,12 @@ static void	monitor_stop_all(t_sim *sim)
 	}
 }
 
-// Check current simulation state.
-// Returns -1 when all coders are done, 0 to continue, or a coder ID on burnout.
+// Check the simulation state and report if finished or if someone burned out.
 
 static int	monitor_check_state(t_sim *sim)
 {
-	int		i;
-	int		now;
+	int	i;
+	int	now;
 
 	i = 0;
 	while (i < sim->config.num_coders)
@@ -50,18 +48,16 @@ static int	monitor_check_state(t_sim *sim)
 	i = 0;
 	while (i < sim->config.num_coders)
 	{
-		if (sim->coders[i].compiles_done
-			< sim->config.num_compiles_required
-			&& sim->coders[i].last_compile_start >= 0
-			&& now - sim->coders[i].last_compile_start
-			> sim->config.time_to_burnout)
+		if (sim->coders[i].compiles_done < sim->config.num_compiles_required
+			&& sim->coders[i].last_compile_start >= 0 && now
+			- sim->coders[i].last_compile_start > sim->config.time_to_burnout)
 			return (sim->coders[i].id);
 		i++;
 	}
 	return (0);
 }
 
-// Set sim->stop with mutex protection
+// Set the shared stop flag while holding the simulation mutex.
 
 static void	set_stop(t_sim *sim)
 {
@@ -70,8 +66,7 @@ static void	set_stop(t_sim *sim)
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
 
-// Monitor thread: waits for start, checks deadlines periodically.
-// Logs burnout within 10ms and stops simulation.
+// Join the start barrier and wait until main releases the simulation.
 
 static void	monitor_wait_start(t_sim *sim)
 {
@@ -84,6 +79,8 @@ static void	monitor_wait_start(t_sim *sim)
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
 
+// Monitor thread loop: wait for the start signal, then watch for burnout
+// or completion.
 void	*monitor_run(void *arg)
 {
 	t_sim	*sim;
@@ -103,11 +100,11 @@ void	*monitor_run(void *arg)
 		{
 			set_stop(sim);
 			log_msg(sim, "burned out", id);
-			monitor_stop_all(sim);
+			monitor_wake_all(sim);
 			return (NULL);
 		}
 		usleep(1000);
 	}
-	monitor_stop_all(sim);
+	monitor_wake_all(sim);
 	return (NULL);
 }

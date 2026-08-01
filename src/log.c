@@ -6,21 +6,20 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:43 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:53:02 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 12:15:35 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Initialise the log mutex (called once at simulation start)
+// Initialize the mutex that protects console output.
 
 void	log_init(t_sim *sim)
 {
 	pthread_mutex_init(&sim->log_mutex, NULL);
 }
 
-// Thread-safe log: prints timestamp + coder ID + message
-// Timestamp is relative to sim->start_time (ms)
+// Print one event with the elapsed time and coder ID without mixing output.
 
 void	log_msg(t_sim *sim, char *msg, int coder_id)
 {
@@ -29,7 +28,7 @@ void	log_msg(t_sim *sim, char *msg, int coder_id)
 	pthread_mutex_unlock(&sim->log_mutex);
 }
 
-// Destroy the log mutex
+// Destroy the mutex used for logging.
 
 void	log_cleanup(t_sim *sim)
 {

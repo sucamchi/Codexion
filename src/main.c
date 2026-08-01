@@ -6,15 +6,14 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:49 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/25 13:57:47 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 12:15:35 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Parse a single integer argument, checking it's at least 'min'
-// Also checks that the string has no letters, no negative sign
-// and is not empty. Returns -1 on error, 0 on success.
+// Check that a string is a valid non-negative integer and at least 'min'.
+// Returns -1 on error, 0 on success.
 
 static int	is_valid_int(char *s, int *val, int min)
 {
@@ -35,7 +34,7 @@ static int	is_valid_int(char *s, int *val, int min)
 	return (0);
 }
 
-// Parse scheduler string: returns FIFO or EDF, -1 on error
+// Convert the scheduler name into the internal FIFO or EDF value.
 
 static int	parse_scheduler(char *s)
 {
@@ -46,7 +45,7 @@ static int	parse_scheduler(char *s)
 	return (-1);
 }
 
-// Parse and validate all 8 command-line arguments
+// Read and validate all command-line arguments into the config struct.
 
 int	parse_args(int argc, char **argv, t_config *cfg)
 {
@@ -72,7 +71,7 @@ int	parse_args(int argc, char **argv, t_config *cfg)
 	return (0);
 }
 
-// Create all threads, wait for them to be ready, set start time
+// Start every worker thread, wait for the barrier, then release them all.
 
 static void	launch_threads(t_sim *sim)
 {
@@ -94,7 +93,8 @@ static void	launch_threads(t_sim *sim)
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
 
-// Entry point: parse arguments, start simulation, launch threads, cleanup
+// Program entry point: parse input, initialize the simulation, run it,
+// and clean up.
 
 int	main(int argc, char **argv)
 {

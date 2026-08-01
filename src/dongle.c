@@ -6,13 +6,13 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:52:55 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 12:15:35 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Initialise a dongle: mutex, condition variable, and wait-queue heap
+// Initialize a dongle's mutex, condition variable, and waiting queue.
 
 int	dongle_init(t_dongle *d, int id, int cap)
 {
@@ -35,14 +35,13 @@ int	dongle_init(t_dongle *d, int id, int cap)
 	return (0);
 }
 
-// Wait helper: handles both cooldown timedwait and plain cond_wait
+// Sleep on the dongle condition variable, using a timed wait during cooldown.
 
 static void	dongle_do_wait(t_dongle *d, int fid, int cid, t_sim *sim)
 {
 	struct timespec	ts;
 
-	if (fid == cid && d->taken_by == 0
-		&& d->cooldown_until > get_time_ms(sim))
+	if (fid == cid && d->taken_by == 0 && d->cooldown_until > get_time_ms(sim))
 	{
 		ts.tv_sec = d->cooldown_until / 1000;
 		ts.tv_nsec = (d->cooldown_until % 1000) * 1000000;
@@ -52,8 +51,7 @@ static void	dongle_do_wait(t_dongle *d, int fid, int cid, t_sim *sim)
 		pthread_cond_wait(&d->cond, &d->mutex);
 }
 
-// Acquire dongle: join wait queue, wait until at front and available.
-// Returns 1 on success, 0 if simulation stopped.
+// Join the waiting queue and block until this coder can use the dongle.
 
 int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 {
@@ -81,7 +79,7 @@ int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 	return (!sim->stop);
 }
 
-// Release dongle: mark free, set cooldown, wake up all waiters
+// Mark the dongle free, start its cooldown, and wake every waiting coder.
 
 void	dongle_release(t_dongle *d, t_sim *sim)
 {
@@ -92,7 +90,7 @@ void	dongle_release(t_dongle *d, t_sim *sim)
 	pthread_mutex_unlock(&d->mutex);
 }
 
-// Destroy dongle resources: cond, mutex, free wait-queue heap
+// Destroy the dongle's synchronization objects and free its queue storage.
 
 void	dongle_cleanup(t_dongle *d)
 {

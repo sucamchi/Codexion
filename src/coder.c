@@ -6,13 +6,13 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:52:40 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 15:02:06 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Wait until all threads are ready and start_time is set by main
+// Coder joins the start barrier and waits until main releases every thread.
 
 static void	coder_wait_start(t_coder *c, t_sim *sim)
 {
@@ -26,9 +26,8 @@ static void	coder_wait_start(t_coder *c, t_sim *sim)
 	c->last_compile_start = 0;
 }
 
-// Take both dongles with deadlock prevention:
-// Even coders grab right first, odd grab left first.
-// Returns 0 if simulation stopped, 1 if both acquired.
+// Choose the order for locking the two dongles.
+// Even coders take the right dongle first; odd coders take the left one first.
 
 static void	coder_pick_dongles(t_coder *c, t_dongle **first, t_dongle **second)
 {
@@ -72,8 +71,7 @@ static int	coder_take_dongles(t_coder *c, t_sim *sim)
 	return (1);
 }
 
-// Run one full cycle: take dongles, compile, release, debug, refactor.
-// Returns 0 if simulation stopped, 1 if cycle completed.
+// Run one full work cycle: take dongles, compile, release, debug, and refactor.
 
 static int	coder_do_cycle(t_coder *c, t_sim *sim)
 {
@@ -85,17 +83,19 @@ static int	coder_do_cycle(t_coder *c, t_sim *sim)
 	dongle_release(c->left_dongle, sim);
 	dongle_release(c->right_dongle, sim);
 	c->compiles_done++;
-	if (c->compiles_done >= sim->config.num_compiles_required)
+	if (sim->stop || c->compiles_done >= sim->config.num_compiles_required)
 		return (1);
 	log_msg(sim, "is debugging", c->id);
 	ms_sleep(sim->config.time_to_debug, sim);
+	if (sim->stop)
+		return (1);
 	log_msg(sim, "is refactoring", c->id);
 	ms_sleep(sim->config.time_to_refactor, sim);
 	return (1);
 }
 
-// Coder thread: wait for start, then repeat cycles until enough compiles
-// done or simulation stops (burnout detected by monitor).
+// Main loop for a coder thread: wait for start, then repeat cycles until done
+// or until the monitor stops the simulation.
 
 void	*coder_lifecycle(void *arg)
 {

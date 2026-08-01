@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   sim.c                                              :+:      :+:    :+:   */
+/*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 14:53:17 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 14:43:22 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Allocate and initialise all dongles
+// Allocate and initialize every dongle, cleaning up if one fails.
 
 static int	init_dongles(t_sim *sim)
 {
@@ -39,9 +39,8 @@ static int	init_dongles(t_sim *sim)
 	return (0);
 }
 
-// Allocate and initialise coder structs, assign left/right dongles.
-// Coder i uses dongles[i] (left) and dongles[(i+1)%n] (right).
-// For 1 coder, left == right (same dongle, takes it once).
+// Allocate coder records and connect each coder to its left and right dongles.
+// For one coder, both pointers refer to the same dongle.
 
 static int	init_coders(t_sim *sim)
 {
@@ -69,7 +68,23 @@ static int	init_coders(t_sim *sim)
 	return (0);
 }
 
-// Initialise simulation state. sim->config must be set beforehand.
+// Free dongles after init_coders fails — called from init_sim's error path.
+
+static void	free_dongles(t_sim *sim)
+{
+	int	i;
+
+	i = 0;
+	while (i < sim->config.num_coders)
+	{
+		dongle_cleanup(&sim->dongles[i]);
+		i++;
+	}
+	free(sim->dongles);
+	sim->dongles = NULL;
+}
+
+// Set the initial simulation state and create the shared sync objects.
 
 int	init_sim(t_sim *sim)
 {
@@ -83,17 +98,16 @@ int	init_sim(t_sim *sim)
 		return (-1);
 	if (init_coders(sim) != 0)
 	{
-		free(sim->dongles);
-		sim->dongles = NULL;
+		free_dongles(sim);
 		return (-1);
 	}
-	pthread_mutex_init(&sim->log_mutex, NULL);
+	log_init(sim);
 	pthread_mutex_init(&sim->sim_mutex, NULL);
 	pthread_cond_init(&sim->start_cond, NULL);
 	return (0);
 }
 
-// Free all simulation resources
+// Join all threads and destroy every resource owned by the simulation.
 
 void	cleanup_sim(t_sim *sim)
 {

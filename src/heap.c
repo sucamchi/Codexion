@@ -6,13 +6,13 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/07/24 15:55:37 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/01 12:13:41 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Initialise a heap with given capacity.
+// Allocate storage for a min-heap with the requested capacity.
 
 int	heap_init(t_heap *h, int capacity)
 {
@@ -24,7 +24,7 @@ int	heap_init(t_heap *h, int capacity)
 	return (0);
 }
 
-// Sift-up: bubble element from index up to restore heap property
+// Move a newly inserted element upward until the heap order is restored.
 
 static void	heap_sift_up(t_heap *h, int i)
 {
@@ -43,7 +43,7 @@ static void	heap_sift_up(t_heap *h, int i)
 	}
 }
 
-// Sift-down: bubble element from index down to restore heap property
+// Move the root element downward after a pop until the heap order is restored.
 
 static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 {
@@ -65,7 +65,7 @@ static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 	h->data[i] = el;
 }
 
-// Push element onto heap. Returns 0 on success, -1 if full.
+// Insert one coder into the priority queue.
 
 int	heap_push(t_heap *h, int coder_id, int priority)
 {
@@ -78,7 +78,7 @@ int	heap_push(t_heap *h, int coder_id, int priority)
 	return (0);
 }
 
-// Pop element from heap. Returns 0 on success, -1 if empty.
+// Remove the coder with the smallest priority from the queue.
 
 int	heap_pop(t_heap *h)
 {
