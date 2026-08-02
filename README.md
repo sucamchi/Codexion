@@ -93,10 +93,10 @@ It makes the code cleaner and easier to read, and it avoids unnecessary mutex co
 
 The program runs in this order:
 
-1. `main()` starts the program and calls `parse_args()` to check the command-line values.
+1. `main()` zeros the simulation struct with `memset`, then calls `parse_args()` to check the command-line values.
 2. If the arguments are valid, `main()` calls `init_sim()` to create the coders, dongles, mutexes, and condition variable.
 3. `main()` then calls `launch_threads()` to start every coder thread and the monitor thread.
-4. Each coder thread runs `coder_lifecycle()`, which first waits in `coder_wait_start()` until every thread is ready.
+4. Each coder thread runs `coder_lifecycle()`, which first waits in `sim_wait_start()` (in `monitor.c`) until every thread is ready.
 5. When the simulation starts, each coder repeats `coder_do_cycle()` until it has done enough compiles or the simulation stops.
 6. Inside each cycle, the coder takes dongles with `coder_take_dongles()`, which uses `coder_pick_dongles()` and `dongle_take()` to avoid deadlocks.
 7. After both dongles are taken, the coder compiles, releases the dongles with `dongle_release()`, and then continues with the debug and refactor steps.
@@ -147,7 +147,9 @@ This breaks the circular dependency — coders 1 and 2 can't both be
 waiting on each other's dongle because they reach for different ones first.
 
 If there's only one coder (n = 1), both `left` and `right` point to the
-same dongle — they just take it once.
+same dongle. `coder_take_dongles` handles this with a `first == second`
+special case (takes it once, logs twice), and `coder_do_cycle` guards
+against double-release with `if (left_dongle != right_dongle)`.
 
 
 ### How the dongle waiting queue works
