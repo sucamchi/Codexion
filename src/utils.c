@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/23 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:46:43 by scamlett         ###   ########.fr       */
+/*   Created: 2026/07/24 18:06:11 by scamlett          #+#    #+#             */
+/*   Updated: 2026/08/02 15:49:52 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,12 +66,4 @@ int	heap_peek(t_heap *h, int *coder_id, int *priority)
 	if (priority)
 		*priority = h->data[0].priority;
 	return (0);
-}
-
-// Free the heap storage and reset its fields.
-
-void	heap_clear(t_heap *h)
-{
-	free(h->data);
-	memset(h, 0, sizeof(*h));
 }

@@ -133,7 +133,6 @@ int						heap_init(t_heap *h);
 int						heap_push(t_heap *h, int coder_id, int priority);
 int						heap_pop(t_heap *h);
 int						heap_peek(t_heap *h, int *coder_id, int *priority);
-void					heap_clear(t_heap *h);
 
 // dongle.c
 

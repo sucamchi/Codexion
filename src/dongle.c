@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:00:29 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 14:45:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,5 +96,6 @@ void	dongle_cleanup(t_dongle *d)
 {
 	pthread_cond_destroy(&d->cond);
 	pthread_mutex_destroy(&d->mutex);
-	heap_clear(&d->wait_queue);
+	free(d->wait_queue.data);
+	memset(&d->wait_queue, 0, sizeof(d->wait_queue));
 }

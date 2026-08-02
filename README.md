@@ -19,8 +19,9 @@ make
 ### Clean
 
 ```bash
-make clean
-make fclean
+make clean  #only removes object files
+make fclean  #removes object files and the binary
+make re  #removes object files and the binary, then rebuilds
 ```
 
 ### Run
@@ -213,8 +214,8 @@ mix their output.
 - https://medium.com/@denaelgammal/dining-philosophers-problem-42-project-guide-mandatory-part-a20fb8dc530e
 - https://dev.to/yel-bakk/codexion-4fk8
 - https://42-fran-byte-f94097.gitlab.io/docs/philosophers/philosophers-approach-es/#/
-- Book: Pthreads Programming: A POSIX Standard for Better Multiprocessing by B Nichols, D. Buttlar, J. Farrell
+- Pthreads Programming: A POSIX Standard for Better Multiprocessing by B Nichols, D. Buttlar, J. Farrell (book)
 
 ### AI usage
 
-AI was used to help format the README.md, to test edge cases, and to provide guidance on how to implement the project.
+AI was used to help format the README.md, to test edge cases, and to provide guidance on how to implement the project. All code is reviewed and understood by the author.
