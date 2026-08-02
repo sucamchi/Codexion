@@ -4,7 +4,7 @@
 
 ## Description
 
-Codexion is a concurrency project based on the [dining philosophers problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem). The goal is to coordinate multiple coder threads competing for shared dongles while respecting cooldowns, timing constraints, logging rules, and a selected scheduling policy.
+Codexion is a concurrency project based on the [dining philosophers problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem). The goal is to coordinate multiple coders (threads) competing for limited dongles (resources) while respecting cooldowns, logging rules, and a selected scheduling policy.
 
 Each coder alternates between compiling, debugging, and refactoring. Compiling requires two dongles at the same time. The simulation ends when either one coder burns out or every coder has completed the required number of compiles.
 
@@ -54,23 +54,27 @@ Below are some example commands to run the simulation with different parameters,
 
 ./codexion 8 2000 200 100 100 1 50 fifo # Large number of coders with minimal work
 ```
+Valgrind can be used to check for memory leaks:
 
+```bash
+valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./codexion 4 800 200 200 200 3 50 fifo
+ ```
 
-## Blocking cases handled
+ ## Blocking cases handled
 
-- Deadlock prevention by avoiding circular dongle acquisition patterns.
+- Deadlock prevention by avoiding circular dongle acquisition patterns. Odd-numbered coders take left first, even-numbered coders take right first. This ensures that no two coders are waiting on each other indefinitely.
 - Starvation control through FIFO/EDF arbitration on each dongle.
 - Precise burnout detection using timestamps and a monitor thread, even if a coder is in debug or refactor.
-- Log serialization so state messages never interleave.
+- Logging is protected by a mutex to prevent messages from different threads from interleaving (mixing).
 - Single-coder handling, where the coder uses the only dongle on the table.
 
 ## Thread synchronization mechanisms
 
 - `pthread_mutex_t` protects each dongle state, the global log output, and shared simulation flags.
 - `pthread_cond_t` is used as a start barrier and to wake waiting coders when a dongle becomes available.
-- The dongle wait queue is implemented as a heap so the selected scheduler can decide which waiting coder is served next.
+- The dongle wait queue is implemented as a min-heap so the selected scheduler can decide which waiting coder is served next.
 
-## A note on the shared stop/progress flags
+## Race-condition prevention
 
 Fields like `sim->stop`, `coder->compiles_done`, and `coder->last_compile_start`
 are sometimes read without holding a mutex. This is intentional:
@@ -100,7 +104,6 @@ The program runs in this order:
 9. If a coder burns out, `monitor_run()` sets `sim->stop` to `1`, logs the burnout, and wakes all coders so they can exit their cycles.
 10. When all threads finish, `main()` calls `cleanup_sim()` to join the threads and free every resource, avoiding memory leaks.
 
-![Execution flow diagram](https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fz9isrrnm8su4bn265b9v.png)
 
 ## How it works
 
@@ -115,7 +118,7 @@ The program uses 7 source files, each with a specific job:
 | `coder.c` | Each coder's life: wait → grab dongles → compile → release → debug → refactor → repeat |
 | `dongle.c` | A shared USB dongle with a mutex, a waiting queue, and a cooldown timer |
 | `heap.c` | A min-heap (priority queue) used as the dongle's waiting queue |
-| `monitor.c` | A watchdog thread that checks if anyone burned out |
+| `monitor.c` | A monitor thread that checks if anyone burned out |
 | `utils.c` | Time helpers, logging, sleep, heap peek/clear |
 
 
@@ -125,7 +128,7 @@ Every coder thread and the monitor thread call a `wait_start()` function.
 They all lock the same mutex, increment a `ready_count`, and then wait on
 a condition variable. The last thread to arrive broadcasts the condition,
 which wakes up `main`. `main` then sets a `started` flag and broadcasts
-again — this wakes up **all** coders and the monitor simultaneously.
+again — this wakes up all coders and the monitor simultaneously.
 
 
 ### How a coder lives and dies
@@ -135,8 +138,7 @@ A coder repeats the cycle of compiling, debugging, and refactoring until either 
 ### How a coder grabs two dongles (deadlock prevention)
 
 A coder needs the dongle on their left AND the dongle on their right.
-To avoid deadlock (everyone holding one and waiting forever), we use
-**asymmetric ordering**:
+To avoid deadlock (everyone holding one and waiting forever):
 
 - Even-numbered coders grab **right first, then left**
 - Odd-numbered coders grab **left first, then right**
@@ -194,7 +196,7 @@ Every `get_time_ms()` call calculates the elapsed milliseconds since that base t
 
 `log_msg()` locks a dedicated mutex before printing.
 This guarantees that two threads can't print at the same time and
-mix their output:
+mix their output.
 
 
 ## Resources
@@ -208,8 +210,9 @@ mix their output:
 - [Pthreads](https://en.wikipedia.org/wiki/Pthreads)
 - https://medium.com/@denaelgammal/dining-philosophers-problem-42-project-guide-mandatory-part-a20fb8dc530e
 - https://dev.to/yel-bakk/codexion-4fk8
-- Books: C Programming: A Modern Approach (2nd Edition) by K. N. King and Pthreads Programming: A POSIX Standard for Better Multiprocessing by B Nichols, D. Buttlar, J. Farrell
+- https://42-fran-byte-f94097.gitlab.io/docs/philosophers/philosophers-approach-es/#/
+- Book: Pthreads Programming: A POSIX Standard for Better Multiprocessing by B Nichols, D. Buttlar, J. Farrell
 
 ### AI usage
 
-AI was used to help draft the README structure, as a tutor and to help refactor functions to adjust to the project requirements and norminette.
+AI was used to help format the README.md, to test edge cases, and to provide guidance on how to implement the project.

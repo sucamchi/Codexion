@@ -6,24 +6,11 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:05:49 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:52:24 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-// Coder joins the start barrier and waits until main releases every thread.
-
-static void	coder_wait_start(t_sim *sim)
-{
-	pthread_mutex_lock(&sim->sim_mutex);
-	sim->ready_count++;
-	if (sim->ready_count == sim->config.num_coders + 1)
-		pthread_cond_broadcast(&sim->start_cond);
-	while (!sim->started)
-		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
-	pthread_mutex_unlock(&sim->sim_mutex);
-}
 
 // Choose the order for locking the two dongles.
 // Even coders take the right dongle first; odd coders take the left one first.
@@ -41,6 +28,7 @@ static void	coder_pick_dongles(t_coder *c, t_dongle **first, t_dongle **second)
 		*second = c->right_dongle;
 	}
 }
+
 // Attempt to take both dongles if possible, otherwise wait.
 
 static int	coder_take_dongles(t_coder *c, t_sim *sim)
@@ -81,7 +69,8 @@ static int	coder_do_cycle(t_coder *c, t_sim *sim)
 	log_msg(sim, "is compiling", c->id);
 	ms_sleep(sim->config.time_to_compile, sim);
 	dongle_release(c->left_dongle, sim);
-	dongle_release(c->right_dongle, sim);
+	if (c->left_dongle != c->right_dongle)
+		dongle_release(c->right_dongle, sim);
 	c->compiles_done++;
 	if (sim->stop || c->compiles_done >= sim->config.num_compiles_required)
 		return (1);
@@ -104,7 +93,7 @@ void	*coder_lifecycle(void *arg)
 
 	c = (t_coder *)arg;
 	sim = c->sim;
-	coder_wait_start(sim);
+	sim_wait_start(sim);
 	c->last_compile_start = 0;
 	while (!sim->stop && c->compiles_done < sim->config.num_compiles_required)
 	{

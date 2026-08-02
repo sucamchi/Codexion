@@ -20,7 +20,7 @@ all: $(NAME)
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(SRCDIR)/codexion.h | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(NAME): $(OBJS)

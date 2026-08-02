@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:26:46 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:35:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,8 @@ static int	init_coders(t_sim *sim)
 	return (0);
 }
 
-// Free dongles after init_coders fails — called from init_sim's error path.
+// Free all dongles and their mutexes/condvars, then free the array.
+// This is called when coder initialization fails, to avoid memory leaks.
 
 static void	free_dongles(t_sim *sim)
 {
@@ -88,11 +89,6 @@ static void	free_dongles(t_sim *sim)
 
 int	init_sim(t_sim *sim)
 {
-	sim->dongles = NULL;
-	sim->coders = NULL;
-	sim->stop = 0;
-	sim->ready_count = 0;
-	sim->started = 0;
 	gettimeofday(&sim->base_time, NULL);
 	if (init_dongles(sim) != 0)
 		return (-1);

@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 22:00:59 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:00:29 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,7 @@
 // Initialize a dongle's mutex, condition variable, and waiting queue.
 int	dongle_init(t_dongle *d)
 {
-	d->taken_by = 0;
-	d->cooldown_until = 0;
+	memset(d, 0, sizeof(*d));
 	if (pthread_mutex_init(&d->mutex, NULL) != 0)
 		return (-1);
 	if (pthread_cond_init(&d->cond, NULL) != 0)

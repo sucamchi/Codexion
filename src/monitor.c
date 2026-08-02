@@ -6,11 +6,25 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:55 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:43:10 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:52:24 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
+
+// Join the start barrier and wait until main releases the simulation.
+// Used by both coder threads and the monitor thread.
+
+void	sim_wait_start(t_sim *sim)
+{
+	pthread_mutex_lock(&sim->sim_mutex);
+	sim->ready_count++;
+	if (sim->ready_count == sim->config.num_coders + 1)
+		pthread_cond_broadcast(&sim->start_cond);
+	while (!sim->started)
+		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
+	pthread_mutex_unlock(&sim->sim_mutex);
+}
 
 // Wake every coder waiting on a dongle so they can notice the stop flag.
 
@@ -67,19 +81,6 @@ static void	set_stop(t_sim *sim)
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
 
-// Join the start barrier and wait until main releases the simulation.
-
-static void	monitor_wait_start(t_sim *sim)
-{
-	pthread_mutex_lock(&sim->sim_mutex);
-	sim->ready_count++;
-	if (sim->ready_count == sim->config.num_coders + 1)
-		pthread_cond_broadcast(&sim->start_cond);
-	while (!sim->started)
-		pthread_cond_wait(&sim->start_cond, &sim->sim_mutex);
-	pthread_mutex_unlock(&sim->sim_mutex);
-}
-
 // Monitor thread loop: wait for the start signal, then watch for burnout
 // or completion.
 void	*monitor_run(void *arg)
@@ -88,7 +89,7 @@ void	*monitor_run(void *arg)
 	int		id;
 
 	sim = (t_sim *)arg;
-	monitor_wait_start(sim);
+	sim_wait_start(sim);
 	while (!sim->stop)
 	{
 		id = monitor_check_state(sim);

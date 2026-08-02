@@ -6,13 +6,15 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 20:58:01 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:52:24 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 // Initialize the heap with capacity for two coders.
+// Each dongle is shared by exactly two neighbors and a coder only re-queues
+// after being popped, so the waiting queue never exceeds 2 entries.
 
 int	heap_init(t_heap *h)
 {

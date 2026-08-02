@@ -6,14 +6,14 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:49 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:42:26 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:53:42 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 // Check that a string is a valid non-negative integer and at least 'min'.
-// Returns -1 on error, 0 on success.
+// Returns 1 on success, 0 on error.
 
 static int	is_valid_int(char *s, int *val, int min)
 {
@@ -21,17 +21,17 @@ static int	is_valid_int(char *s, int *val, int min)
 
 	i = 0;
 	if (!s || s[0] == '\0')
-		return (-1);
+		return (0);
 	while (s[i])
 	{
 		if (s[i] < '0' || s[i] > '9')
-			return (-1);
+			return (0);
 		i++;
 	}
 	*val = atoi(s);
 	if (*val < min)
-		return (-1);
-	return (0);
+		return (0);
+	return (1);
 }
 
 // Convert the scheduler name into the internal FIFO or EDF value.
@@ -51,22 +51,22 @@ int	parse_args(int argc, char **argv, t_config *cfg)
 {
 	if (argc != 9)
 		return (-1);
-	if (is_valid_int(argv[1], &cfg->num_coders, 1))
+	if (!is_valid_int(argv[1], &cfg->num_coders, 1))
 		return (-1);
-	if (is_valid_int(argv[2], &cfg->time_to_burnout, 1))
+	if (!is_valid_int(argv[2], &cfg->time_to_burnout, 1))
 		return (-1);
-	if (is_valid_int(argv[3], &cfg->time_to_compile, 1))
+	if (!is_valid_int(argv[3], &cfg->time_to_compile, 1))
 		return (-1);
-	if (is_valid_int(argv[4], &cfg->time_to_debug, 1))
+	if (!is_valid_int(argv[4], &cfg->time_to_debug, 1))
 		return (-1);
-	if (is_valid_int(argv[5], &cfg->time_to_refactor, 1))
+	if (!is_valid_int(argv[5], &cfg->time_to_refactor, 1))
 		return (-1);
-	if (is_valid_int(argv[6], &cfg->num_compiles_required, 1))
+	if (!is_valid_int(argv[6], &cfg->num_compiles_required, 1))
 		return (-1);
-	if (is_valid_int(argv[7], &cfg->dongle_cooldown, 0))
+	if (!is_valid_int(argv[7], &cfg->dongle_cooldown, 0))
 		return (-1);
 	cfg->scheduler = parse_scheduler(argv[8]);
-	if (cfg->scheduler < 0)
+	if (cfg->scheduler == -1)
 		return (-1);
 	return (0);
 }
@@ -93,16 +93,17 @@ static void	launch_threads(t_sim *sim)
 	pthread_mutex_unlock(&sim->sim_mutex);
 }
 
-// Program entry point: parse input, initialize the simulation, run it,
-// and clean up.
+// Main entry point: parse arguments, initialize the simulation after memset,
+// launch threads, and clean up.
 
 int	main(int argc, char **argv)
 {
 	t_sim	sim;
 
+	memset(&sim, 0, sizeof(sim));
 	if (parse_args(argc, argv, &sim.config) != 0)
 	{
-		fprintf(stderr, "invalid arguments\n");
+		fprintf(stderr, "Error: invalid arguments\n");
 		return (1);
 	}
 	if (init_sim(&sim) != 0)

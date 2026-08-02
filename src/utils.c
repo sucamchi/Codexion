@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:28:19 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:46:43 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,8 +72,6 @@ int	heap_peek(t_heap *h, int *coder_id, int *priority)
 
 void	heap_clear(t_heap *h)
 {
-	if (h->data)
-		free(h->data);
-	h->data = NULL;
-	h->size = 0;
+	free(h->data);
+	memset(h, 0, sizeof(*h));
 }

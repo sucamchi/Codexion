@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:04:15 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/01 21:26:46 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/02 13:58:20 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@ void					*monitor_run(void *arg);
 
 // utils.c
 
+void					sim_wait_start(t_sim *sim);
 int						get_time_ms(t_sim *sim);
 void					ms_sleep(int ms, t_sim *sim);
 void					log_msg(t_sim *sim, char *msg, int coder_id);
