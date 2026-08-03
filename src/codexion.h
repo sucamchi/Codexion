@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:04:15 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:58:20 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/03 14:27:27 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ struct					s_sim
 int						heap_init(t_heap *h);
 int						heap_push(t_heap *h, int coder_id, int priority);
 int						heap_pop(t_heap *h);
-int						heap_peek(t_heap *h, int *coder_id, int *priority);
+int						heap_peek(t_heap *h, int *coder_id);
 
 // dongle.c
 

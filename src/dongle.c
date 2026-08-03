@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 14:45:03 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/03 14:27:27 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,12 +59,12 @@ int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 
 	pthread_mutex_lock(&d->mutex);
 	heap_push(&d->wait_queue, cid, prio);
-	heap_peek(&d->wait_queue, &first, NULL);
+	heap_peek(&d->wait_queue, &first);
 	if (first == cid)
 		pthread_cond_broadcast(&d->cond);
 	while (!sim->stop)
 	{
-		heap_peek(&d->wait_queue, &first, NULL);
+		heap_peek(&d->wait_queue, &first);
 		if (first == cid && d->taken_by == 0
 			&& get_time_ms(sim) >= d->cooldown_until)
 			break ;

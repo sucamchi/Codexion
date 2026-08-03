@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/24 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 15:49:52 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/03 14:31:29 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,15 +55,13 @@ void	log_msg(t_sim *sim, char *msg, int coder_id)
 }
 
 // Read the top heap element without removing it.
-// Called by the monitor to check the priority of waiting coders.
+// Called by dongle_take to check if the calling coder is first in line.
 
-int	heap_peek(t_heap *h, int *coder_id, int *priority)
+int	heap_peek(t_heap *h, int *coder_id)
 {
 	if (h->size == 0)
 		return (-1);
 	if (coder_id)
 		*coder_id = h->data[0].coder_id;
-	if (priority)
-		*priority = h->data[0].priority;
 	return (0);
 }

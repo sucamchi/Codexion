@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:52:24 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/03 12:23:13 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ int	heap_init(t_heap *h)
 }
 
 // Move a newly inserted element upward until the heap order is restored.
+// int p refers to the parent index, and i is the current index of the element being sifted up.
+// The loop continues until the element is in the correct position/priority order.
 
 static void	heap_sift_up(t_heap *h, int i)
 {
@@ -45,6 +47,8 @@ static void	heap_sift_up(t_heap *h, int i)
 }
 
 // Move an element downward until the heap order is restored.
+// int c refers to the child index, and i is the current index of the element being sifted down.
+// The loop continues until the element is in the correct position/priority order.
 
 static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
 {
