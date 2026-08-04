@@ -211,6 +211,7 @@ mix their output.
 - [Dining philosophers problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
 - [Concurrency](https://en.wikipedia.org/wiki/Concurrency_(computer_science))
 - [Pthreads](https://en.wikipedia.org/wiki/Pthreads)
+- https://github.com/DeRuina/philosophers
 - https://medium.com/@denaelgammal/dining-philosophers-problem-42-project-guide-mandatory-part-a20fb8dc530e
 - https://dev.to/yel-bakk/codexion-4fk8
 - https://42-fran-byte-f94097.gitlab.io/docs/philosophers/philosophers-approach-es/#/

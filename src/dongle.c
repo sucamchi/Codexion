@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/03 14:27:27 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 11:54:00 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,17 +33,23 @@ int	dongle_init(t_dongle *d)
 }
 
 // Sleep on the dongle's condition variable until the coder can take it.
-// Uses `pthread_cond_timedwait` if the dongle is cooling down.
+// If the dongle is cooling down, use pthread_cond_timedwait to wake up
+// when the cooldown expires. Since cooldown_until is in relative ms and
+// pthread_cond_timedwait expects an absolute Epoch time, we convert by
+// adding the base_time: tv_usec/1000 gives the ms fraction, then the
+// total ms offset is split into seconds and the remaining nanoseconds.
 
 static void	dongle_do_wait(t_dongle *d, int first, int cid, t_sim *sim)
 {
 	struct timespec	ts;
+	long			deadline;
 
 	if (first == cid && d->taken_by == 0
 		&& d->cooldown_until > get_time_ms(sim))
 	{
-		ts.tv_sec = d->cooldown_until / 1000;
-		ts.tv_nsec = (d->cooldown_until % 1000) * 1000000;
+		deadline = sim->base_time.tv_usec / 1000 + d->cooldown_until;
+		ts.tv_sec = sim->base_time.tv_sec + deadline / 1000;
+		ts.tv_nsec = (deadline % 1000) * 1000000;
 		pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
 	}
 	else
