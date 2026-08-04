@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 12:38:24 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,12 @@ static int	coder_take_dongles(t_coder *c, t_sim *sim)
 {
 	t_dongle	*first;
 	t_dongle	*second;
-	int			prio;
+	long		prio;
 
 	if (sim->config.scheduler == EDF)
 		prio = c->last_compile_start + sim->config.time_to_burnout;
 	else
-		prio = get_time_ms(sim);
+		prio = get_time_ms();
 	coder_pick_dongles(c, &first, &second);
 	if (first == second)
 	{
@@ -66,7 +66,7 @@ static int	coder_do_cycle(t_coder *c, t_sim *sim)
 {
 	if (!coder_take_dongles(c, sim))
 		return (0);
-	c->last_compile_start = get_time_ms(sim);
+	c->last_compile_start = get_time_ms();
 	log_msg(sim, "is compiling", c->id);
 	ms_sleep(sim->config.time_to_compile, sim);
 	dongle_release(c->left_dongle, sim);
@@ -95,7 +95,7 @@ void	*coder_lifecycle(void *arg)
 	c = (t_coder *)arg;
 	sim = c->sim;
 	sim_wait_start(sim);
-	c->last_compile_start = 0;
+	c->last_compile_start = sim->base_time_ms;
 	while (!sim->stop && c->compiles_done < sim->config.num_compiles_required)
 	{
 		if (!coder_do_cycle(c, sim))

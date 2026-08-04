@@ -97,7 +97,7 @@ The program runs in this order:
 1. `main()` zeros the simulation struct with `memset`, then calls `parse_args()` to check the command-line values.
 2. If the arguments are valid, `main()` calls `init_sim()` to create the coders, dongles, mutexes, and condition variable.
 3. `main()` then calls `launch_threads()` to start every coder thread and the monitor thread.
-4. Each coder thread runs `coder_lifecycle()`, which first waits in `sim_wait_start()` (in `monitor.c`) until every thread is ready.
+4. Each coder thread runs `coder_lifecycle()`, which first waits in `sim_wait_start()` until every thread is ready.
 5. When the simulation starts, each coder repeats `coder_do_cycle()` until it has done enough compiles or the simulation stops.
 6. Inside each cycle, the coder takes dongles with `coder_take_dongles()`, which uses `coder_pick_dongles()` and `dongle_take()` to avoid deadlocks.
 7. After both dongles are taken, the coder compiles, releases the dongles with `dongle_release()`, and then continues with the debug and refactor steps.
@@ -167,8 +167,11 @@ This heap always keeps the smallest priority at the top.
 ### How the cooldown works
 
 When a coder releases a dongle, the dongle becomes unavailable for
-`dongle_cooldown` milliseconds. The dongle's `cooldown_end` timestamp is set to the current time plus the cooldown. Any coder trying to take the dongle while it is cooling down will be blocked.
-Any coder that is waiting on a dongle will be automatically woken up when the cooldown ends, and they will re-check if they can take the dongle.
+`dongle_cooldown` milliseconds. The dongle's `cooldown_until` timestamp
+is set to the current epoch time plus the cooldown. Any coder trying
+to take the dongle while it is cooling down will be blocked.
+Any coder that is waiting on a dongle will be automatically woken up
+when the cooldown ends, and they will re-check if they can take the dongle.
 
 ### How the monitor detects burnout
 
@@ -191,9 +194,13 @@ always at position `[0]`:
 
 ### How time is measured
 
-Instead of using absolute Unix timestamps (which might overflow `int`),
-we capture the current time **once** at startup in `sim->base_time`.
-Every `get_time_ms()` call calculates the elapsed milliseconds since that base time. This keeps all timestamps small and relative to the simulation start.
+`get_time_ms()` returns the current time in milliseconds since the Unix
+epoch using `gettimeofday`. All internal timestamps (`cooldown_until`,
+`last_compile_start`) are stored as absolute epoch milliseconds.
+
+For display, `log_msg()` subtracts `sim->base_time_ms` (captured once
+at startup) so that log output shows relative time since the simulation
+began.
 
 
 ### How logging stays clean

@@ -6,50 +6,40 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/24 18:06:11 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 13:32:08 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 14:09:17 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-// Calculate the number of milliseconds since the simulation started.
-// Used for timestamps and timeouts.
+// Return current time in milliseconds
 
-int	get_time_ms(t_sim *sim)
+long	get_time_ms(void)
 {
 	struct timeval	now;
-	int				sec;
-	int				usec;
 
 	gettimeofday(&now, NULL);
-	sec = (int)(now.tv_sec - sim->base_time.tv_sec);
-	usec = (int)(now.tv_usec - sim->base_time.tv_usec);
-	if (usec < 0)
-	{
-		sec--;
-		usec += 1000000;
-	}
-	return (sec * 1000 + usec / 1000);
+	return ((long)now.tv_sec * 1000 + now.tv_usec / 1000);
 }
 
 // Sleep for ms milliseconds, checking sim->stop every 500 µs so
 // the coder wakes up early when the monitor signals a burnout.
 
-void	ms_sleep(int ms, t_sim *sim)
+void	ms_sleep(long ms, t_sim *sim)
 {
-	int	start;
+	long	start;
 
-	start = get_time_ms(sim);
-	while (!sim->stop && get_time_ms(sim) - start < ms)
+	start = get_time_ms();
+	while (!sim->stop && get_time_ms() - start < ms)
 		usleep(500);
 }
 
-// Thread-safe log: print timestamp, coder ID, and message.
+// Thread-safe log: print relative timestamp, coder ID, and message.
 // The log mutex ensures that messages from different threads don't interleave.
 
 void	log_msg(t_sim *sim, char *msg, int coder_id)
 {
 	pthread_mutex_lock(&sim->log_mutex);
-	printf("%d %d %s\n", get_time_ms(sim), coder_id, msg);
+	printf("%ld %d %s\n", get_time_ms() - sim->base_time_ms, coder_id, msg);
 	pthread_mutex_unlock(&sim->log_mutex);
 }

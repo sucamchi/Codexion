@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:04:15 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 13:32:15 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 typedef struct s_heap_elem
 {
 	int					coder_id;
-	int					priority;
+	long				priority;
 }						t_heap_elem;
 
 // Heap structure for the priority queue
@@ -53,7 +53,7 @@ typedef struct s_heap
 typedef struct s_dongle
 {
 	int					taken_by;
-	int					cooldown_until;
+	long				cooldown_until;
 	pthread_mutex_t		mutex;
 	pthread_cond_t		cond;
 	t_heap				wait_queue;
@@ -92,7 +92,7 @@ struct					s_coder
 {
 	int					id;
 	int					compiles_done;
-	int					last_compile_start;
+	long				last_compile_start;
 	pthread_t			thread;
 	t_dongle			*left_dongle;
 	t_dongle			*right_dongle;
@@ -117,7 +117,7 @@ struct					s_sim
 	t_config			config;
 	t_dongle			*dongles;
 	t_coder				*coders;
-	struct timeval		base_time;
+	long				base_time_ms;
 	int					started;
 	int					stop;
 	int					ready_count;
@@ -130,21 +130,21 @@ struct					s_sim
 // heap.c
 
 int						heap_init(t_heap *h);
-int						heap_push(t_heap *h, int coder_id, int priority);
+int						heap_push(t_heap *h, int coder_id, long priority);
 int						heap_pop(t_heap *h);
 int						heap_peek(t_heap *h, int *coder_id);
 
 // utils.c
 
 void					sim_wait_start(t_sim *sim);
-int						get_time_ms(t_sim *sim);
-void					ms_sleep(int ms, t_sim *sim);
+long					get_time_ms(void);
+void					ms_sleep(long ms, t_sim *sim);
 void					log_msg(t_sim *sim, char *msg, int coder_id);
 
 // dongle.c
 
 int						dongle_init(t_dongle *d);
-int						dongle_take(t_dongle *d, int coder_id, int priority,
+int						dongle_take(t_dongle *d, int coder_id, long prio,
 							t_sim *sim);
 void					dongle_release(t_dongle *d, t_sim *sim);
 void					dongle_cleanup(t_dongle *d);

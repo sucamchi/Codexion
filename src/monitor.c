@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/24 18:05:55 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 15:49:39 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,8 @@ static void	monitor_wake_all(t_sim *sim)
 
 static int	monitor_check_state(t_sim *sim)
 {
-	int	i;
-	int	now;
+	int		i;
+	long	now;
 
 	i = 0;
 	while (i < sim->config.num_coders)
@@ -58,7 +58,7 @@ static int	monitor_check_state(t_sim *sim)
 	}
 	if (i == sim->config.num_coders)
 		return (-1);
-	now = get_time_ms(sim);
+	now = get_time_ms();
 	i = 0;
 	while (i < sim->config.num_coders)
 	{

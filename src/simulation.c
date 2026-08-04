@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 13:38:55 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,10 @@ static void	free_dongles(t_sim *sim)
 
 int	init_sim(t_sim *sim)
 {
-	gettimeofday(&sim->base_time, NULL);
+	struct timeval	tv;
+
+	gettimeofday(&tv, NULL);
+	sim->base_time_ms = (long)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 	if (init_dongles(sim) != 0)
 		return (-1);
 	if (init_coders(sim) != 0)

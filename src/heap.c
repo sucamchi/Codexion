@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 13:38:09 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int	heap_init(t_heap *h)
 // Insert one coder into the heap with its priority.
 // With at most 2 elements, a single swap keeps the min at the root.
 
-int	heap_push(t_heap *h, int coder_id, int priority)
+int	heap_push(t_heap *h, int coder_id, long priority)
 {
 	t_heap_elem	tmp;
 

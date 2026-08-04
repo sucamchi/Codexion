@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:03 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 11:54:00 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:52:03 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,22 +34,17 @@ int	dongle_init(t_dongle *d)
 
 // Sleep on the dongle's condition variable until the coder can take it.
 // If the dongle is cooling down, use pthread_cond_timedwait to wake up
-// when the cooldown expires. Since cooldown_until is in relative ms and
-// pthread_cond_timedwait expects an absolute Epoch time, we convert by
-// adding the base_time: tv_usec/1000 gives the ms fraction, then the
-// total ms offset is split into seconds and the remaining nanoseconds.
+// when the cooldown expires. cooldown_until is an absolute epoch ms
+// timestamp, so it can be used directly for the timedwait.
 
-static void	dongle_do_wait(t_dongle *d, int first, int cid, t_sim *sim)
+static void	dongle_do_wait(t_dongle *d, int first, int cid)
 {
 	struct timespec	ts;
-	long			deadline;
 
-	if (first == cid && d->taken_by == 0
-		&& d->cooldown_until > get_time_ms(sim))
+	if (first == cid && d->taken_by == 0 && d->cooldown_until > get_time_ms())
 	{
-		deadline = sim->base_time.tv_usec / 1000 + d->cooldown_until;
-		ts.tv_sec = sim->base_time.tv_sec + deadline / 1000;
-		ts.tv_nsec = (deadline % 1000) * 1000000;
+		ts.tv_sec = d->cooldown_until / 1000;
+		ts.tv_nsec = (d->cooldown_until % 1000) * 1000000;
 		pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
 	}
 	else
@@ -59,7 +54,7 @@ static void	dongle_do_wait(t_dongle *d, int first, int cid, t_sim *sim)
 // Lock the dongle mutex, add the coder to the waiting queue,
 // and wait until the coder can take the dongle.
 
-int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
+int	dongle_take(t_dongle *d, int cid, long prio, t_sim *sim)
 {
 	int	first;
 
@@ -72,9 +67,9 @@ int	dongle_take(t_dongle *d, int cid, int prio, t_sim *sim)
 	{
 		heap_peek(&d->wait_queue, &first);
 		if (first == cid && d->taken_by == 0
-			&& get_time_ms(sim) >= d->cooldown_until)
+			&& get_time_ms() >= d->cooldown_until)
 			break ;
-		dongle_do_wait(d, first, cid, sim);
+		dongle_do_wait(d, first, cid);
 	}
 	if (!sim->stop)
 	{
@@ -91,7 +86,7 @@ void	dongle_release(t_dongle *d, t_sim *sim)
 {
 	pthread_mutex_lock(&d->mutex);
 	d->taken_by = 0;
-	d->cooldown_until = get_time_ms(sim) + sim->config.dongle_cooldown;
+	d->cooldown_until = get_time_ms() + sim->config.dongle_cooldown;
 	pthread_cond_broadcast(&d->cond);
 	pthread_mutex_unlock(&d->mutex);
 }
