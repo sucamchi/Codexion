@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:03:54 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:52:24 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 12:38:24 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ static void	coder_pick_dongles(t_coder *c, t_dongle **first, t_dongle **second)
 }
 
 // Attempt to take both dongles if possible, otherwise wait.
+// smaller prio value = higher priority.
 
 static int	coder_take_dongles(t_coder *c, t_sim *sim)
 {

@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:06:02 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/02 13:35:03 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:38:55 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ static int	init_dongles(t_sim *sim)
 	return (0);
 }
 
-// Allocate coder records and connect each coder to its left and right dongles.
+// Allocate coders and assign each coder its left and right dongle.
 // For one coder, both pointers refer to the same dongle.
 
 static int	init_coders(t_sim *sim)

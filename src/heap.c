@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:05:36 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/04 11:38:33 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:38:09 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,71 +25,44 @@ int	heap_init(t_heap *h)
 	return (0);
 }
 
-// Move a newly inserted element upward until the heap order is restored.
-// p: parent index, i: current index of the element being sifted up.
-// Loop until the element is in the correct position/priority order.
-
-static void	heap_sift_up(t_heap *h, int i)
-{
-	int			p;
-	t_heap_elem	tmp;
-
-	while (i > 0)
-	{
-		p = (i - 1) / 2;
-		if (h->data[i].priority >= h->data[p].priority)
-			break ;
-		tmp = h->data[i];
-		h->data[i] = h->data[p];
-		h->data[p] = tmp;
-		i = p;
-	}
-}
-
-// Move an element downward until the heap order is restored.
-// c: child index, i: current index of the element being sifted down.
-// Loop until the element is in the correct position/priority order.
-
-static void	heap_sift_down(t_heap *h, t_heap_elem el, int i)
-{
-	int	c;
-
-	while (1)
-	{
-		c = 2 * i + 1;
-		if (c >= h->size)
-			break ;
-		if (c + 1 < h->size && h->data[c + 1].priority < h->data[c].priority)
-			c++;
-		if (el.priority <= h->data[c].priority)
-			break ;
-		h->data[i] = h->data[c];
-		i = c;
-	}
-	h->data[i] = el;
-}
-
 // Insert one coder into the heap with its priority.
+// With at most 2 elements, a single swap keeps the min at the root.
 
 int	heap_push(t_heap *h, int coder_id, int priority)
 {
+	t_heap_elem	tmp;
+
 	h->data[h->size].coder_id = coder_id;
 	h->data[h->size].priority = priority;
-	heap_sift_up(h, h->size);
+	if (h->size == 1 && h->data[1].priority < h->data[0].priority)
+	{
+		tmp = h->data[0];
+		h->data[0] = h->data[1];
+		h->data[1] = tmp;
+	}
 	h->size++;
 	return (0);
 }
 
 // Pop the coder with the smallest priority from the queue.
+// With at most 2 elements, the remaining entry is already at the root.
 
 int	heap_pop(t_heap *h)
 {
-	t_heap_elem	el;
-
 	if (h->size == 0)
 		return (-1);
 	h->size--;
-	el = h->data[h->size];
-	heap_sift_down(h, el, 0);
+	return (0);
+}
+
+// Read the top heap element without removing it.
+// Called by dongle_take to check if the caller is the first in line.
+
+int	heap_peek(t_heap *h, int *coder_id)
+{
+	if (h->size == 0)
+		return (-1);
+	if (coder_id)
+		*coder_id = h->data[0].coder_id;
 	return (0);
 }

@@ -120,7 +120,7 @@ The program uses 7 source files, each with a specific job:
 | `dongle.c` | A shared USB dongle with a mutex, a waiting queue, and a cooldown timer |
 | `heap.c` | A min-heap (priority queue) used as the dongle's waiting queue |
 | `monitor.c` | A monitor thread that checks if anyone burned out |
-| `utils.c` | Time helpers, logging, sleep, heap peek/clear |
+| `utils.c` | Time helpers, logging, sleep |
 
 
 ### The startup barrier (all threads wait for "go")
@@ -177,15 +177,16 @@ The monitor thread wakes up every 1 ms and checks each coder's `last_compile_sta
 
 ### How the min-heap works (the priority queue)
 
-A min-heap is a binary tree stored in an array where the **smallest**
-element is always at position `[0]`. Two internal helpers maintain
-this property:
+Each dongle has its own min-heap with capacity for exactly two entries,
+because each dongle sits between only two adjacent coders.
 
-- **sift_up**: when adding a new element at the end, bubble it up by
-  swapping with its parent until the heap property is restored.
-- **sift_down**: after removing the root (position 0), take the last
-  element, put it at the top, and bubble it down by swapping with the
-  smaller child.
+Since the heap holds at most two elements, the smallest priority is
+always at position `[0]`:
+
+- **Push**: insert at `[1]`; if it is smaller than `[0]`, swap them.
+- **Pop**: just decrement the size — the remaining element is already
+  at the root.
+- **Peek**: return `[0]` without removing it.
 
 
 ### How time is measured

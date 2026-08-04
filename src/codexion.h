@@ -6,7 +6,7 @@
 /*   By: scamlett <scamlett@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/23 18:04:15 by scamlett          #+#    #+#             */
-/*   Updated: 2026/08/03 14:27:27 by scamlett         ###   ########.fr       */
+/*   Updated: 2026/08/04 13:32:15 by scamlett         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,13 @@ int						heap_push(t_heap *h, int coder_id, int priority);
 int						heap_pop(t_heap *h);
 int						heap_peek(t_heap *h, int *coder_id);
 
+// utils.c
+
+void					sim_wait_start(t_sim *sim);
+int						get_time_ms(t_sim *sim);
+void					ms_sleep(int ms, t_sim *sim);
+void					log_msg(t_sim *sim, char *msg, int coder_id);
+
 // dongle.c
 
 int						dongle_init(t_dongle *d);
@@ -149,13 +156,6 @@ void					*coder_lifecycle(void *arg);
 // monitor.c
 
 void					*monitor_run(void *arg);
-
-// utils.c
-
-void					sim_wait_start(t_sim *sim);
-int						get_time_ms(t_sim *sim);
-void					ms_sleep(int ms, t_sim *sim);
-void					log_msg(t_sim *sim, char *msg, int coder_id);
 
 // main.c
 
